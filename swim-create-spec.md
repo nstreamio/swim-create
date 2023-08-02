@@ -10,8 +10,8 @@ Main benefits:
 * Allow for creating templates from existing projects.
 * Add planes, agents or lanes to existing projects.
 * Support for multiple languages (Java, Rust).
-* Manage swim dependencies and allow for automatic updates when new versions are available.
 * Produce build scripts for deployment.
+* Manage swim dependencies and allow for automatic updates when new versions are available.
 * Allow for uploading projects directly from the CLI.
 
 ## Design ideas
