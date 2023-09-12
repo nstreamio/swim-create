@@ -65,22 +65,26 @@ struct Gitignore;
 fn main() {
     let args = Args::parse();
 
-    println!("Name:  {}", args.name);
-    println!("Port: {}", args.port);
-    println!("Swim version: {}", args.swim_version);
+    let name = &args.name;
+    let port = args.port;
+    let swim_version = &args.swim_version;
 
-    fs::create_dir(&args.name).unwrap();
-    fs::create_dir_all(format!("{0}/src/main/java/{0}", args.name)).expect(FOLDER_CREATE_ERROR);
-    fs::create_dir_all(format!("{0}/src/main/resources", args.name)).expect(FOLDER_CREATE_ERROR);
+    println!("Name:  {}", name);
+    println!("Port: {}", port);
+    println!("Swim version: {}", swim_version);
 
-    fs::write(format!("{0}/settings.gradle", args.name), SettingsGradle { name: &args.name }.to_string()).expect(FILE_WRITE_ERROR);
-    fs::write(format!("{0}/build.gradle", args.name), BuildGradle { name: &args.name, swim_version: &args.swim_version }.to_string()).expect(FILE_WRITE_ERROR);
-    fs::write(format!("{0}/.gitignore", args.name), Gitignore.to_string()).expect(FILE_WRITE_ERROR);
-    fs::write(format!("{0}/gradlew", args.name), Gradlew.to_string()).expect(FILE_WRITE_ERROR);
-    fs::write(format!("{0}/gradlew.bat", args.name), GradlewBat.to_string()).expect(FILE_WRITE_ERROR);
+    fs::create_dir(name).expect(FOLDER_CREATE_ERROR);
+    fs::create_dir_all(format!("{name}/src/main/java/{name}")).expect(FOLDER_CREATE_ERROR);
+    fs::create_dir_all(format!("{name}/src/main/resources")).expect(FOLDER_CREATE_ERROR);
 
-    fs::write(format!("{0}/src/main/java/{0}/MainPlane.java", args.name), MainPlaneJava { name: &args.name }.to_string()).expect(FILE_WRITE_ERROR);
-    fs::write(format!("{0}/src/main/java/module-info.java", args.name), ModuleInfoJava { name: &args.name }.to_string()).expect(FILE_WRITE_ERROR);
-    fs::write(format!("{0}/src/main/resources/server.recon", args.name), ServerRecon { name: &args.name, port: args.port }.to_string()).expect(FILE_WRITE_ERROR);
+    fs::write(format!("{name}/setting.gradle"), SettingsGradle { name }.to_string()).expect(FILE_WRITE_ERROR);
+    fs::write(format!("{name}/build.gradle"), BuildGradle { name, swim_version }.to_string()).expect(FILE_WRITE_ERROR);
+    fs::write(format!("{name}/.gitignore"), Gitignore.to_string()).expect(FILE_WRITE_ERROR);
+    fs::write(format!("{name}/gradlew"), Gradlew.to_string()).expect(FILE_WRITE_ERROR);
+    fs::write(format!("{name}/gradlew.bat"), GradlewBat.to_string()).expect(FILE_WRITE_ERROR);
+
+    fs::write(format!("{name}/src/main/java/{name}/MainPlane.java"), MainPlaneJava { name }.to_string()).expect(FILE_WRITE_ERROR);
+    fs::write(format!("{name}/src/main/java/module-info.java"), ModuleInfoJava { name }.to_string()).expect(FILE_WRITE_ERROR);
+    fs::write(format!("{name}/src/main/resources/server.recon"), ServerRecon { name, port }.to_string()).expect(FILE_WRITE_ERROR);
 }
 
