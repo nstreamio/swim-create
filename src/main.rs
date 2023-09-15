@@ -19,47 +19,47 @@ struct Args {
 }
 
 #[derive(Boilerplate)]
-#[boilerplate(filename = "settings.gradle")]
+#[boilerplate(filename = "swim-template/settings.gradle")]
 struct SettingsGradle<'a> {
     name: &'a String,
 }
 
 #[derive(Boilerplate)]
-#[boilerplate(filename = "build.gradle")]
+#[boilerplate(filename = "swim-template/build.gradle")]
 struct BuildGradle<'a, 'b> {
     name: &'a String,
     swim_version: &'b String,
 }
 
 #[derive(Boilerplate)]
-#[boilerplate(filename = "MainPlane.java")]
+#[boilerplate(filename = "swim-template/src/main/java/example/MainPlane.java")]
 struct MainPlaneJava<'a> {
     name: &'a String,
 }
 
 #[derive(Boilerplate)]
-#[boilerplate(filename = "module-info.java")]
+#[boilerplate(filename = "swim-template/src/main/java/module-info.java")]
 struct ModuleInfoJava<'a> {
     name: &'a String,
 }
 
 #[derive(Boilerplate)]
-#[boilerplate(filename = "server.recon")]
+#[boilerplate(filename = "swim-template/src/main/resources/server.recon")]
 struct ServerRecon<'a> {
     name: &'a String,
     port: u16,
 }
 
 #[derive(Boilerplate)]
-#[boilerplate(filename = "gradlew")]
+#[boilerplate(filename = "swim-template/gradlew")]
 struct Gradlew;
 
 #[derive(Boilerplate)]
-#[boilerplate(filename = "gradlew.bat")]
+#[boilerplate(filename = "swim-template/gradlew.bat")]
 struct GradlewBat;
 
 #[derive(Boilerplate)]
-#[boilerplate(filename = ".gitignore")]
+#[boilerplate(filename = "swim-template/.gitignore")]
 struct Gitignore;
 
 fn main() {
@@ -87,4 +87,3 @@ fn main() {
     fs::write(format!("{name}/src/main/java/module-info.java"), ModuleInfoJava { name }.to_string()).expect(FILE_WRITE_ERROR);
     fs::write(format!("{name}/src/main/resources/server.recon"), ServerRecon { name, port }.to_string()).expect(FILE_WRITE_ERROR);
 }
-

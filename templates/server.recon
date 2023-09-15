@@ -1,6 +1,0 @@
-{{self.name}}: @fabric {
-    @plane(class: "{{self.name}}.MainPlane")
-}
-@web(port: {{self.port}}) {
-    space: "{{self.name}}"
-}
