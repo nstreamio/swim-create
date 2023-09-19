@@ -1,11 +1,15 @@
-use std::fmt::{Debug, Display};
-use std::{fmt, fs};
-use std::error::Error;
-use clap::Parser;
-use boilerplate::Boilerplate;
-use regex::Regex;
+mod error;
+mod utils;
 
-#[derive(Parser, Debug)]
+use crate::utils::*;
+use clap::Parser;
+use serde::Serialize;
+use std::fmt::Debug;
+use walkdir::WalkDir;
+
+const PROJECT_TEMPLATE_FOLDER: &str = "templates/swim-template";
+
+#[derive(Parser, Debug, Serialize)]
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// The name of the project.
@@ -20,124 +24,31 @@ struct Args {
     swim_version: String,
 }
 
-fn validate_name(name: &str) -> Result<String, CliError> {
-    let name = name.trim().to_lowercase();
-
-    if Regex::new(r"^[a-zA-Z_]\w*$").unwrap().is_match(&name) {
-        Ok(name)
-    } else {
-        Err(CliError::ProjectNameError)
-    }
-}
-
-
-#[derive(Debug, Clone)]
-enum CliError {
-    FolderCreateError(String),
-    FileWriteError(String),
-    ProjectNameError,
-}
-
-impl Error for CliError {}
-
-impl Display for CliError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            CliError::FolderCreateError(description) => { write!(f, "Unable to create folder: {}!", description) }
-            CliError::FileWriteError(description) => { write!(f, "Unable to write file: {}!", description) }
-            CliError::ProjectNameError => { write!(f, "The project name must start with a letter and contain only alphanumeric characters and underscores!") }
-        }
-    }
-}
-
-
-#[derive(Boilerplate)]
-#[boilerplate(filename = "swim-template/settings.gradle")]
-struct SettingsGradle<'a> {
-    name: &'a String,
-}
-
-#[derive(Boilerplate)]
-#[boilerplate(filename = "swim-template/build.gradle")]
-struct BuildGradle<'a, 'b> {
-    name: &'a String,
-    swim_version: &'b String,
-}
-
-#[derive(Boilerplate)]
-#[boilerplate(filename = "swim-template/src/main/java/example/MainPlane.java")]
-struct MainPlaneJava<'a> {
-    name: &'a String,
-}
-
-#[derive(Boilerplate)]
-#[boilerplate(filename = "swim-template/src/main/java/module-info.java")]
-struct ModuleInfoJava<'a> {
-    name: &'a String,
-}
-
-#[derive(Boilerplate)]
-#[boilerplate(filename = "swim-template/src/main/resources/server.recon")]
-struct ServerRecon<'a> {
-    name: &'a String,
-    port: u16,
-}
-
-#[derive(Boilerplate)]
-#[boilerplate(filename = "swim-template/gradlew")]
-struct Gradlew;
-
-#[derive(Boilerplate)]
-#[boilerplate(filename = "swim-template/gradlew.bat")]
-struct GradlewBat;
-
-#[derive(Boilerplate)]
-#[boilerplate(filename = "swim-template/.gitignore")]
-struct Gitignore;
-
-fn create_dirs(name: &String) -> Result<(), CliError> {
-    fs::create_dir(name).map_err(|err| CliError::FolderCreateError(err.to_string()))?;
-    fs::create_dir_all(format!("{name}/src/main/java/{name}")).map_err(|err| CliError::FolderCreateError(err.to_string()))?;
-    fs::create_dir_all(format!("{name}/src/main/resources")).map_err(|err| CliError::FolderCreateError(err.to_string()))?;
-    Ok(())
-}
-
-
-fn write_files(name: &String, swim_version: &String, port: u16) -> Result<(), CliError> {
-    fs::write(format!("{name}/setting.gradle"), SettingsGradle { name }.to_string()).map_err(|err| CliError::FileWriteError(err.to_string()))?;
-    fs::write(format!("{name}/build.gradle"), BuildGradle { name, swim_version }.to_string()).map_err(|err| CliError::FileWriteError(err.to_string()))?;
-    fs::write(format!("{name}/.gitignore"), Gitignore.to_string()).map_err(|err| CliError::FileWriteError(err.to_string()))?;
-    fs::write(format!("{name}/gradlew"), Gradlew.to_string()).map_err(|err| CliError::FileWriteError(err.to_string()))?;
-    fs::write(format!("{name}/gradlew.bat"), GradlewBat.to_string()).map_err(|err| CliError::FileWriteError(err.to_string()))?;
-
-    fs::write(format!("{name}/src/main/java/{name}/MainPlane.java"), MainPlaneJava { name }.to_string()).map_err(|err| CliError::FileWriteError(err.to_string()))?;
-    fs::write(format!("{name}/src/main/java/module-info.java"), ModuleInfoJava { name }.to_string()).map_err(|err| CliError::FileWriteError(err.to_string()))?;
-    fs::write(format!("{name}/src/main/resources/server.recon"), ServerRecon { name, port }.to_string()).map_err(|err| CliError::FileWriteError(err.to_string()))?;
-
-    Ok(())
-}
-
 fn main() {
     let args = Args::parse();
 
-    let name = &args.name;
-    let port = args.port;
-    let swim_version = &args.swim_version;
-
-
-    if let Err(err) = create_dirs(name) {
-        println!("{}", err);
-        std::process::exit(1)
-    }
-
-    if let Err(err) = write_files(name, swim_version, port) {
-        println!("{}", err);
-        std::process::exit(1)
+    for path in WalkDir::new(PROJECT_TEMPLATE_FOLDER)
+        .into_iter()
+        .filter_entry(|e| !is_hidden(e))
+        .filter_map(|e| e.ok())
+        .map(|entry| entry.into_path())
+    {
+        // Creates the directories and files recursively
+        if path.is_dir() {
+            if let Err(err) = create_dir(path, &args) {
+                println!("{}", err);
+                std::process::exit(1)
+            }
+        } else if path.is_file() {
+            if let Err(err) = create_file(path, &args) {
+                println!("{}", err);
+                std::process::exit(1)
+            }
+        }
     }
 
     println!("---Swim project created---");
-    println!("Name: {}", name);
-    println!("Port: {}", port);
-    println!("Swim version: {}", swim_version);
+    println!("Name: {}", args.name);
+    println!("Port: {}", args.port);
+    println!("Swim version: {}", args.swim_version);
 }
-
