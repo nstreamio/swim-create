@@ -35,12 +35,12 @@ fn main() {
     {
         // Creates the directories and files recursively
         if path.is_dir() {
-            if let Err(err) = create_dir(path, &args) {
+            if let Err(err) = create_dir(&path, &args) {
                 println!("{}", err);
                 std::process::exit(1)
             }
         } else if path.is_file() {
-            if let Err(err) = create_file(path, &args) {
+            if let Err(err) = create_file(&path, &args) {
                 println!("{}", err);
                 std::process::exit(1)
             }

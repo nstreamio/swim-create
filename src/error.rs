@@ -1,3 +1,4 @@
+use crate::error::CliError::{CreateDir, CreateFile};
 use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
@@ -7,6 +8,20 @@ pub(crate) enum CliError {
     CreateDir { dir: String, description: String },
     CreateFile { file: String, description: String },
     ProjectName,
+}
+
+impl CliError {
+    pub(crate) fn create_dir_err(dir: String, description: String) -> Self {
+        CreateDir { dir, description }
+    }
+
+    pub(crate) fn create_file_err(file: String, description: String) -> Self {
+        CreateFile { file, description }
+    }
+
+    pub(crate) fn project_name_err() -> Self {
+        CliError::ProjectName
+    }
 }
 
 impl Error for CliError {}

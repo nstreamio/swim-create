@@ -1,8 +1,10 @@
 use crate::error::CliError;
 use crate::{Args, PROJECT_TEMPLATE_FOLDER};
 use regex::Regex;
+use serde::Serialize;
+use std::error::Error;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use tera::Tera;
 use walkdir::DirEntry;
 
@@ -15,7 +17,7 @@ pub(crate) fn validate_name(name: &str) -> Result<String, CliError> {
     {
         Ok(name)
     } else {
-        Err(CliError::ProjectName)
+        Err(CliError::project_name_err())
     }
 }
 
@@ -27,55 +29,40 @@ pub(crate) fn is_hidden(entry: &DirEntry) -> bool {
         .unwrap_or(false)
 }
 
-pub(crate) fn create_dir(input_dir: PathBuf, args: &Args) -> Result<(), CliError> {
-    let output_dir =
-        Path::new(&args.name).join(input_dir.strip_prefix(PROJECT_TEMPLATE_FOLDER).map_err(
-            |err| CliError::CreateDir {
-                dir: input_dir.display().to_string(),
-                description: err.to_string(),
-            },
-        )?);
-    fs::create_dir(output_dir.display().to_string()).map_err(|err| CliError::CreateDir {
-        dir: output_dir.display().to_string(),
-        description: err.kind().to_string(),
+pub(crate) fn create_dir(input_dir: &Path, args: &Args) -> Result<(), CliError> {
+    let output_dir = get_output_dir(input_dir, args).map_err(|err| {
+        CliError::create_dir_err(input_dir.display().to_string(), err.to_string())
     })?;
+    fs::create_dir(&output_dir)
+        .map_err(|err| CliError::create_dir_err(output_dir, err.kind().to_string()))?;
     Ok(())
 }
 
-pub(crate) fn create_file(input_file: PathBuf, args: &Args) -> Result<(), CliError> {
-    let output_file =
-        Path::new(&args.name).join(input_file.strip_prefix(PROJECT_TEMPLATE_FOLDER).map_err(
-            |err| CliError::CreateFile {
-                file: input_file.display().to_string(),
-                description: err.to_string(),
-            },
-        )?);
-    let input_text = fs::read_to_string(input_file).map_err(|err| CliError::CreateFile {
-        file: output_file.display().to_string(),
-        description: err.to_string(),
+pub(crate) fn create_file(input_file: &Path, args: &Args) -> Result<(), CliError> {
+    let output_file = get_output_dir(input_file, args).map_err(|err| {
+        CliError::create_file_err(input_file.display().to_string(), err.to_string())
     })?;
-
-    let mut tera = Tera::default();
-    tera.add_raw_template("file", &input_text)
-        .map_err(|err| CliError::CreateFile {
-            file: output_file.display().to_string(),
-            description: err.to_string(),
-        })?;
-    let context = tera::Context::from_serialize(args).map_err(|err| CliError::CreateFile {
-        file: output_file.display().to_string(),
-        description: err.to_string(),
-    })?;
-    let output_text = tera
-        .render("file", &context)
-        .map_err(|err| CliError::CreateFile {
-            file: output_file.display().to_string(),
-            description: err.to_string(),
-        })?;
-
-    fs::write(&output_file, output_text).map_err(|err| CliError::CreateFile {
-        file: output_file.display().to_string(),
-        description: err.to_string(),
-    })?;
+    let input_text = fs::read_to_string(input_file)
+        .map_err(|err| CliError::create_file_err(output_file.clone(), err.kind().to_string()))?;
+    let output_text = replace_text(&input_text, args)
+        .map_err(|err| CliError::create_file_err(output_file.clone(), err.to_string()))?;
+    fs::write(&output_file, output_text)
+        .map_err(|err| CliError::create_file_err(output_file, err.kind().to_string()))?;
 
     Ok(())
+}
+
+pub(crate) fn get_output_dir(input_dir: &Path, args: &Args) -> Result<String, Box<dyn Error>> {
+    let output_dir = Path::new(&args.name).join(input_dir.strip_prefix(PROJECT_TEMPLATE_FOLDER)?);
+    replace_text(&output_dir.display().to_string(), args)
+}
+
+pub(crate) fn replace_text(
+    template_text: &str,
+    values: impl Serialize,
+) -> Result<String, Box<dyn Error>> {
+    let mut tera = Tera::default();
+    tera.add_raw_template("text", template_text)?;
+    let context = tera::Context::from_serialize(values)?;
+    Ok(tera.render("text", &context)?)
 }
