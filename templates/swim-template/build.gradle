@@ -1,0 +1,13 @@
+apply plugin: 'application'
+
+version = '0.0.1'
+mainClassName = '{{name}}.MainPlane'
+ext.moduleName = '{{name}}'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation group: 'org.swimos', name: 'swim-server', version: '{{swim_version}}'
+}
