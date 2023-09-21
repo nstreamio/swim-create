@@ -1,3 +1,3 @@
 [submodule "templates"]
-	path = templates
+	path = templates/swim-template
 	url = git@github.com:nstreamio/swim-template.git
