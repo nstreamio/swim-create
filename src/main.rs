@@ -3,11 +3,12 @@ mod utils;
 
 use crate::utils::*;
 use clap::Parser;
+use rust_embed::RustEmbed;
 use serde::Serialize;
 use std::fmt::Debug;
-use walkdir::WalkDir;
+use std::path::Path;
 
-const PROJECT_TEMPLATE_FOLDER: &str = "templates/swim-template";
+const PROJECT_TEMPLATE_FOLDER: &str = "swim-template";
 
 #[derive(Parser, Debug, Serialize)]
 #[command(author, version, about, long_about = None)]
@@ -24,26 +25,23 @@ struct Args {
     swim_version: String,
 }
 
+#[derive(RustEmbed)]
+#[folder = "templates"]
+#[exclude = "swim-template/.git/*"]
+struct Templates;
+
 fn main() {
     let args = Args::parse();
 
-    for path in WalkDir::new(PROJECT_TEMPLATE_FOLDER)
-        .into_iter()
-        .filter_entry(|e| !is_hidden(e))
-        .filter_map(|e| e.ok())
-        .map(|entry| entry.into_path())
-    {
-        // Creates the directories and files recursively
-        if path.is_dir() {
-            if let Err(err) = create_dir(&path, &args) {
-                println!("{}", err);
-                std::process::exit(1)
-            }
-        } else if path.is_file() {
-            if let Err(err) = create_file(&path, &args) {
-                println!("{}", err);
-                std::process::exit(1)
-            }
+    if let Err(err) = create_dir(args.name.clone()) {
+        println!("{}", err);
+        std::process::exit(1)
+    }
+
+    for path in Templates::iter() {
+        if let Err(err) = create_file(Path::new(&path.to_string()), &args) {
+            println!("{}", err);
+            std::process::exit(1)
         }
     }
 
