@@ -4,9 +4,11 @@ use regex::Regex;
 use serde::Serialize;
 use std::error::Error;
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use tera::Tera;
+
+#[cfg(target_family = "unix")]
+use std::os::unix::fs::PermissionsExt;
 
 pub(crate) fn validate_name(name: &str) -> Result<String, CliError> {
     let name = name.trim().to_lowercase();
@@ -47,7 +49,7 @@ pub(crate) fn create_file(input_file: &Path, args: &Args) -> Result<(), CliError
     } else {
         create_regular_file(input_file, &output_file, args)?;
         if input_file.display().to_string().ends_with("gradlew")
-            || input_file.display().to_string().ends_with("gradlew.bat")
+            || input_file.display().to_string().ends_with("gradlew.bat") && cfg!(unix)
         {
             set_executable_permissions(&output_file)?;
         }
