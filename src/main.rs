@@ -21,7 +21,7 @@ struct Args {
     #[arg(short, long, default_value_t = 9001)]
     port: u16,
     /// The version of the Swim server dependencies.
-    #[arg(short, long, default_value = "4.0.1")]
+    #[arg(short, long, default_value = "4.1.0.12")]
     swim_version: String,
 }
 

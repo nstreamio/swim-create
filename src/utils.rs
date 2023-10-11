@@ -4,6 +4,7 @@ use regex::Regex;
 use serde::Serialize;
 use std::error::Error;
 use std::fs;
+use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use tera::Tera;
 
@@ -41,6 +42,25 @@ pub(crate) fn create_file(input_file: &Path, args: &Args) -> Result<(), CliError
 
     create_parent_dirs(&output_file)?;
 
+    if input_file.display().to_string().ends_with(".jar") {
+        create_jar_file(input_file, &output_file)?;
+    } else {
+        create_regular_file(input_file, &output_file, args)?;
+        if input_file.display().to_string().ends_with("gradlew")
+            || input_file.display().to_string().ends_with("gradlew.bat")
+        {
+            set_executable_permissions(&output_file)?;
+        }
+    }
+
+    Ok(())
+}
+
+pub(crate) fn create_regular_file(
+    input_file: &Path,
+    output_file: &String,
+    args: &Args,
+) -> Result<(), CliError> {
     let input_file = Templates::get(&input_file.display().to_string())
         .ok_or(CliError::missing_file_err(output_file.clone()))?;
 
@@ -50,9 +70,24 @@ pub(crate) fn create_file(input_file: &Path, args: &Args) -> Result<(), CliError
     let output_text = replace_text(&input_text, args)
         .map_err(|err| CliError::create_file_err(output_file.clone(), err.to_string()))?;
 
-    fs::write(&output_file, output_text)
-        .map_err(|err| CliError::create_file_err(output_file, err.kind().to_string()))?;
+    fs::write(output_file, output_text)
+        .map_err(|err| CliError::create_file_err(output_file.clone(), err.kind().to_string()))?;
 
+    Ok(())
+}
+
+pub(crate) fn create_jar_file(input_file: &Path, output_file: &String) -> Result<(), CliError> {
+    let input_file = Templates::get(&input_file.display().to_string())
+        .ok_or(CliError::missing_file_err(output_file.clone()))?;
+
+    fs::write(output_file, input_file.data)
+        .map_err(|err| CliError::create_file_err(output_file.clone(), err.kind().to_string()))?;
+
+    Ok(())
+}
+
+pub(crate) fn set_executable_permissions(output_file: &String) -> Result<(), CliError> {
+    fs::set_permissions(output_file, fs::Permissions::from_mode(0o755)).unwrap();
     Ok(())
 }
 
