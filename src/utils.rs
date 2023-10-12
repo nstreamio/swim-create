@@ -49,7 +49,7 @@ pub(crate) fn create_file(input_file: &Path, args: &Args) -> Result<(), CliError
     } else {
         create_regular_file(input_file, &output_file, args)?;
         if input_file.display().to_string().ends_with("gradlew")
-            || input_file.display().to_string().ends_with("gradlew.bat") && cfg!(unix)
+            || input_file.display().to_string().ends_with("gradlew.bat")
         {
             set_executable_permissions(&output_file)?;
         }
@@ -88,8 +88,14 @@ pub(crate) fn create_jar_file(input_file: &Path, output_file: &String) -> Result
     Ok(())
 }
 
+#[cfg(target_family = "unix")]
 pub(crate) fn set_executable_permissions(output_file: &String) -> Result<(), CliError> {
     fs::set_permissions(output_file, fs::Permissions::from_mode(0o755)).unwrap();
+    Ok(())
+}
+
+#[cfg(target_family = "windows")]
+pub(crate) fn set_executable_permissions(output_file: &String) -> Result<(), CliError> {
     Ok(())
 }
 
