@@ -1,5 +1,5 @@
 use crate::error::CliError;
-use crate::{Args, Templates, PROJECT_TEMPLATE_FOLDER};
+use crate::{Args, TemplatesDir};
 use regex::Regex;
 use serde::Serialize;
 use std::error::Error;
@@ -63,7 +63,7 @@ pub(crate) fn create_regular_file(
     output_file: &String,
     args: &Args,
 ) -> Result<(), CliError> {
-    let input_file = Templates::get(&input_file.display().to_string())
+    let input_file = TemplatesDir::get(&input_file.display().to_string())
         .ok_or(CliError::missing_file_err(output_file.clone()))?;
 
     let input_text = String::from_utf8(input_file.data.to_vec())
@@ -79,7 +79,7 @@ pub(crate) fn create_regular_file(
 }
 
 pub(crate) fn create_jar_file(input_file: &Path, output_file: &String) -> Result<(), CliError> {
-    let input_file = Templates::get(&input_file.display().to_string())
+    let input_file = TemplatesDir::get(&input_file.display().to_string())
         .ok_or(CliError::missing_file_err(output_file.clone()))?;
 
     fs::write(output_file, input_file.data)
@@ -100,7 +100,8 @@ pub(crate) fn set_executable_permissions(output_file: &String) -> Result<(), Cli
 }
 
 pub(crate) fn get_output_dir(input_dir: &Path, args: &Args) -> Result<String, Box<dyn Error>> {
-    let output_dir = Path::new(&args.name).join(input_dir.strip_prefix(PROJECT_TEMPLATE_FOLDER)?);
+    let output_dir =
+        Path::new(&args.name).join(input_dir.strip_prefix(args.template_type.get_folder())?);
     replace_text(&output_dir.display().to_string(), args)
 }
 

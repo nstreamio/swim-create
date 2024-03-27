@@ -2,13 +2,11 @@ mod error;
 mod utils;
 
 use crate::utils::*;
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use rust_embed::RustEmbed;
 use serde::Serialize;
 use std::fmt::Debug;
 use std::path::Path;
-
-const PROJECT_TEMPLATE_FOLDER: &str = "swim-template";
 
 #[derive(Parser, Debug, Serialize)]
 #[command(author, version, about, long_about = None)]
@@ -21,14 +19,35 @@ struct Args {
     #[arg(short, long, default_value_t = 9001)]
     port: u16,
     /// The version of the Swim server dependencies.
-    #[arg(short, long, default_value = "4.1.0.12")]
+    #[arg(short, long, default_value = "4.2.14")]
     swim_version: String,
+    /// The type of the project template.
+    #[arg(short, long, value_enum, default_value_t = Template::Gradle)]
+    template_type: Template,
+}
+
+#[derive(ValueEnum, Clone, Default, Debug, Serialize)]
+#[serde(rename_all = "kebab-case")]
+enum Template {
+    /// Java template using Gradle.
+    #[default]
+    Gradle,
+    /// Java template with a module using Gradle.
+    GradleModule,
+}
+
+impl Template {
+    pub fn get_folder(&self) -> String {
+        match self {
+            Template::Gradle => "swim-gradle-template".to_string(),
+            Template::GradleModule => "swim-gradle-module-template".to_string(),
+        }
+    }
 }
 
 #[derive(RustEmbed)]
 #[folder = "templates"]
-#[exclude = "swim-template/.git/*"]
-struct Templates;
+struct TemplatesDir;
 
 fn main() {
     let args = Args::parse();
@@ -38,7 +57,9 @@ fn main() {
         std::process::exit(1)
     }
 
-    for path in Templates::iter() {
+    let template_folder = args.template_type.get_folder();
+
+    for path in TemplatesDir::iter().filter(|path| path.starts_with(&template_folder)) {
         if let Err(err) = create_file(Path::new(&path.to_string()), &args) {
             println!("{}", err);
             std::process::exit(1)
