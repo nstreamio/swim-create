@@ -1,0 +1,6 @@
+{{name}}: @fabric {
+    @plane(class: "{{name}}.MainPlane")
+}
+@web(port: {{port}}) {
+    space: "{{name}}"
+}

@@ -34,6 +34,10 @@ enum Template {
     Gradle,
     /// Java template with a module using Gradle.
     GradleModule,
+    /// Java template using Maven.
+    Maven,
+    /// Java template with a module using Maven.
+    MavenModule,
 }
 
 impl Template {
@@ -41,6 +45,8 @@ impl Template {
         match self {
             Template::Gradle => "swim-gradle-template".to_string(),
             Template::GradleModule => "swim-gradle-module-template".to_string(),
+            Template::Maven => "swim-maven-template".to_string(),
+            Template::MavenModule => "swim-maven-module-template".to_string(),
         }
     }
 }

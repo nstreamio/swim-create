@@ -50,6 +50,8 @@ pub(crate) fn create_file(input_file: &Path, args: &Args) -> Result<(), CliError
         create_regular_file(input_file, &output_file, args)?;
         if input_file.display().to_string().ends_with("gradlew")
             || input_file.display().to_string().ends_with("gradlew.bat")
+            || input_file.display().to_string().ends_with("mvnw")
+            || input_file.display().to_string().ends_with("mvnw.cmd")
         {
             set_executable_permissions(&output_file)?;
         }
