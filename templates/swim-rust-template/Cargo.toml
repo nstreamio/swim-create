@@ -1,0 +1,8 @@
+[package]
+name = "{{name}}"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+swimos = { git = "https://github.com/swimos/swim-rust", features = ["server", "agent"] }
+tokio = { features = ["rt-multi-thread", "macros", "signal"], version = "1.37.0" }

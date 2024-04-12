@@ -38,6 +38,8 @@ enum Template {
     Maven,
     /// Java template with a module using Maven.
     MavenModule,
+    /// Rust template.
+    Rust,
 }
 
 impl Template {
@@ -47,6 +49,7 @@ impl Template {
             Template::GradleModule => "swim-gradle-module-template".to_string(),
             Template::Maven => "swim-maven-template".to_string(),
             Template::MavenModule => "swim-maven-module-template".to_string(),
+            Template::Rust => "swim-rust-template".to_string(),
         }
     }
 }
@@ -75,5 +78,13 @@ fn main() {
     println!("---Swim project created---");
     println!("Name: {}", args.name);
     println!("Port: {}", args.port);
-    println!("Swim version: {}", args.swim_version);
+
+    match args.template_type {
+        Template::Rust => {
+            println!("Swim version: pre-release");
+        }
+        _ => {
+            println!("Swim version: {}", args.swim_version);
+        }
+    }
 }
